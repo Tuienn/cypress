@@ -211,8 +211,8 @@ describe("Kiểm thử chức năng đăng nhập - TheGioiDiDong", () => {
     });
   });
 
-  it("TC8: Nhập ít/nhiều hơn 6 số OTP", () => {
-    cy.log("TC8: Bắt đầu kiểm thử validation độ dài OTP");
+  it("TC8: Nhập OTP cú pháp không hợp lệ", () => {
+    cy.log("TC8: Bắt đầu kiểm thử validation OTP với cú pháp không hợp lệ");
 
     // Setup đến trang nhập OTP
     cy.log(
@@ -223,7 +223,9 @@ describe("Kiểm thử chức năng đăng nhập - TheGioiDiDong", () => {
       clickContinueButton().then(() => {
         // Đợi user manual bypass reCAPTCHA
         waitForManualRecaptchaBypass().then(() => {
-          cy.log("PHẦN 2: Bắt đầu test validation OTP");
+          cy.log(
+            "PHẦN 2: Bắt đầu test validation OTP với các cú pháp không hợp lệ"
+          );
 
           // Sub-test 1: Nhập ít hơn 6 số
           cy.log("Sub-test 1: Nhập ít hơn 6 số - nhập 123");
@@ -247,9 +249,68 @@ describe("Kiểm thử chức năng đăng nhập - TheGioiDiDong", () => {
                       expect(value).to.have.length.at.most(6);
                       cy.log(`Xác minh độ dài value: ${value.length} ≤ 6`);
 
-                      cy.log(
-                        "TC8: Hoàn thành - Đã kiểm tra validation độ dài OTP"
-                      );
+                      // Sub-test 3: Nhập ký tự đặc biệt và chữ cái
+                      cy.log("Sub-test 3: Nhập ký tự đặc biệt - nhập 123*ab");
+                      enterOTP("123*ab").then(() => {
+                        cy.log(
+                          "Kiểm tra giá trị thực tế trong input OTP sau khi nhập ký tự đặc biệt"
+                        );
+
+                        cy.get('input[name="txtOTP"]').then(($input2) => {
+                          const specialValue = $input2.val();
+                          cy.log(
+                            `Giá trị hiện tại trong OTP input: "${specialValue}"`
+                          );
+
+                          if (specialValue === "123") {
+                            cy.log(
+                              "THÀNH CÔNG: Hệ thống đã lọc bỏ ký tự đặc biệt - chỉ giữ lại số"
+                            );
+
+                            // Kiểm tra OTP chỉ chứa số
+                            expect(specialValue).to.match(
+                              /^\d*$/,
+                              "OTP chỉ nên chứa số"
+                            );
+                            cy.log(
+                              "TC8: Hoàn thành - Hệ thống xử lý đúng tất cả validation OTP"
+                            );
+                          } else if (specialValue === "123*ab") {
+                            cy.log(
+                              "HỆ THỐNG CHO PHÉP NHẬP KÝ TỰ ĐẶC BIỆT - ĐÂY LÀ LỖI BẢO MẬT!"
+                            );
+
+                            // Thử submit để kiểm tra validation
+                            clickConfirmOTPButton().then(() => {
+                              verifyStillOnStep2().then(() => {
+                                cy.get(".step2 label").should("be.visible");
+
+                                cy.log(
+                                  "Test FAILED: Hệ thống cho phép nhập ký tự đặc biệt vào OTP"
+                                );
+                                cy.fail(
+                                  "Lỗi bảo mật: Hệ thống cho phép nhập ký tự đặc biệt vào trường OTP"
+                                );
+                              });
+                            });
+                          } else {
+                            cy.log(
+                              `Hệ thống xử lý input theo cách khác - Giá trị: "${specialValue}"`
+                            );
+
+                            if (specialValue && specialValue.length > 0) {
+                              expect(specialValue).to.match(
+                                /^\d*$/,
+                                "OTP chỉ nên chứa số"
+                              );
+                            }
+
+                            cy.log(
+                              "TC8: Hoàn thành - Đã kiểm tra tất cả validation OTP cú pháp không hợp lệ"
+                            );
+                          }
+                        });
+                      });
                     });
                 });
               });
@@ -260,77 +321,7 @@ describe("Kiểm thử chức năng đăng nhập - TheGioiDiDong", () => {
     });
   });
 
-  it("TC9: Nhập chữ/kí tự đặc biệt vào OTP", () => {
-    cy.log("TC9: Bắt đầu kiểm thử nhập ký tự đặc biệt vào trường OTP");
-
-    // Setup đến trang nhập OTP
-    cy.log(
-      "PHẦN 1: Setup đến trang nhập OTP - cần can thiệp thủ công cho reCAPTCHA"
-    );
-
-    enterPhoneNumber("0942029423").then(() => {
-      clickContinueButton().then(() => {
-        // Đợi user manual bypass reCAPTCHA
-        waitForManualRecaptchaBypass().then(() => {
-          cy.log("PHẦN 2: Test nhập ký tự đặc biệt vào OTP");
-
-          // Nhập ký tự đặc biệt và chữ cái
-          enterOTP("123*ab").then(() => {
-            cy.log("Kiểm tra giá trị thực tế trong input OTP sau khi nhập");
-
-            cy.get('input[name="txtOTP"]').then(($input) => {
-              const value = $input.val();
-              cy.log(`Giá trị hiện tại trong OTP input: "${value}"`);
-
-              if (value === "123") {
-                cy.log(
-                  "THÀNH CÔNG: Hệ thống đã lọc bỏ ký tự đặc biệt - chỉ giữ lại số"
-                );
-
-                // Kiểm tra OTP chỉ chứa số
-                expect(value).to.match(/^\d*$/, "OTP chỉ nên chứa số");
-                cy.log(
-                  "TC9: Hoàn thành - Hệ thống xử lý đúng ký tự đặc biệt trong OTP"
-                );
-              } else if (value === "123*ab") {
-                cy.log(
-                  "HỆ THỐNG CHO PHÉP NHẬP KÝ TỰ ĐẶC BIỆT - ĐÂY LÀ LỖI BẢO MẬT!"
-                );
-
-                // Thử submit để kiểm tra validation
-                clickConfirmOTPButton().then(() => {
-                  verifyStillOnStep2().then(() => {
-                    cy.get(".step2 label").should("be.visible");
-
-                    cy.log(
-                      "Test FAILED: Hệ thống cho phép nhập ký tự đặc biệt vào OTP"
-                    );
-                    cy.fail(
-                      "Lỗi bảo mật: Hệ thống cho phép nhập ký tự đặc biệt vào trường OTP"
-                    );
-                  });
-                });
-              } else {
-                cy.log(
-                  `Hệ thống xử lý input theo cách khác - Giá trị: "${value}"`
-                );
-
-                if (value && value.length > 0) {
-                  expect(value).to.match(/^\d*$/, "OTP chỉ nên chứa số");
-                }
-
-                cy.log(
-                  "TC9: Hoàn thành - Đã kiểm tra xử lý ký tự đặc biệt trong OTP"
-                );
-              }
-            });
-          });
-        });
-      });
-    });
-  });
-
-  it("TC10: Nhập sai mã xác thực", () => {
+  it("TC9: Nhập sai mã xác thực", () => {
     cy.log("TC10: Bắt đầu kiểm thử trường hợp nhập mã OTP sai");
 
     // Setup đến trang nhập OTP
@@ -405,7 +396,7 @@ describe("Kiểm thử chức năng đăng nhập - TheGioiDiDong", () => {
     });
   });
 
-  it("TC11: Hỗ trợ gửi lại mã xác nhận", () => {
+  it("TC10: Hỗ trợ gửi lại mã xác nhận", () => {
     cy.log("TC11: Bắt đầu kiểm thử chức năng gửi lại mã xác nhận");
 
     // Setup đến trang nhập OTP
@@ -488,7 +479,7 @@ describe("Kiểm thử chức năng đăng nhập - TheGioiDiDong", () => {
     });
   });
 
-  it("TC12: Hỗ trợ thay đổi số điện thoại", () => {
+  it("TC11: Hỗ trợ thay đổi số điện thoại", () => {
     cy.log("TC12: Bắt đầu kiểm thử chức năng thay đổi số điện thoại");
 
     // Setup đến trang nhập OTP
@@ -561,7 +552,7 @@ describe("Kiểm thử chức năng đăng nhập - TheGioiDiDong", () => {
     });
   });
 
-  it("TC13: Nhấn nút ENTER để xác thực", () => {
+  it("TC12: Nhấn nút ENTER để xác thực", () => {
     cy.log("TC13: Bắt đầu kiểm thử chức năng nhấn phím ENTER để xác thực OTP");
 
     // Setup đến trang nhập OTP
@@ -639,7 +630,7 @@ describe("Kiểm thử chức năng đăng nhập - TheGioiDiDong", () => {
     });
   });
 
-  it("TC14: Nhập đúng mã xác thực", () => {
+  it("TC13: Nhập đúng mã xác thực", () => {
     cy.log("TC14: Bắt đầu kiểm thử trường hợp nhập đúng mã OTP");
 
     // Setup đến trang nhập OTP
