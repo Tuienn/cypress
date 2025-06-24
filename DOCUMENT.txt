@@ -1,0 +1,14 @@
+1. Terminal
+    - cy.wait(3000): Delay 3s
+    - cy.get("#username").type("tuyenboy1234): Tìm element có ID username và nhập "tuyenboy1234"
+    - cy.get("[name='password']").type("123456789"): Tìm element có name=password và nhập "123456789"
+    - cy.get("button[type='submit']").click(): Tìm element button có type 'submit' và nhấn nút
+    - cy.get("input").eq(0).type("input first"): Tim element input thứ 0 và nhập "input first"
+    - cy.get("input").then(items => {
+        items[0].type("input first")
+        items[1].type("input second")
+    }): arrow function custom thao tác
+    - cy.get("input").each((item, index) => {
+        item.type("input " + index)
+    }): arrow function vòng lặp each
+    - cy

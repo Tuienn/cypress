@@ -1,0 +1,12 @@
+{
+  "name": "cypress-test thegioididong",
+  "version": "1.0.0",
+  "description": "Cypress test for thegioididong",
+  "scripts": {
+    "dev": "cypress open",
+    "test": "cypress run --browser firefox --headed"
+  },
+  "devDependencies": {
+    "cypress": "^14.4.1"
+  }
+}
